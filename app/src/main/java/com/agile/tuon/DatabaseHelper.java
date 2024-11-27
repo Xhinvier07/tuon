@@ -5,6 +5,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "TuonDB";
@@ -80,6 +83,53 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+    // Count learned words for today
+    public int getWordsLearnedToday() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        Cursor cursor = db.rawQuery(
+                "SELECT COUNT(*) FROM " + TABLE_PROGRESS + " WHERE learned = 1 AND date = ?",
+                new String[]{today});
+
+        int count = 0;
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+        }
+        cursor.close();
+        return count;
+    }
+
+    // Fetch average quiz score
+    public double getAverageQuizScore() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT AVG(" + COLUMN_SCORE + ") FROM " + TABLE_QUIZ_RESULTS, null);
+
+        double average = 0;
+        if (cursor.moveToFirst()) {
+            average = cursor.getDouble(0);
+        }
+        cursor.close();
+        return average;
+    }
+
+    // Calculate vocabulary mastery percentage
+    public double getVocabularyMastery() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor totalCursor = db.rawQuery(
+                "SELECT COUNT(*) FROM " + TABLE_FLASHCARDS, null);
+        Cursor learnedCursor = db.rawQuery(
+                "SELECT COUNT(*) FROM " + TABLE_PROGRESS + " WHERE learned = 1", null);
+
+        int total = totalCursor.moveToFirst() ? totalCursor.getInt(0) : 0;
+        int learned = learnedCursor.moveToFirst() ? learnedCursor.getInt(0) : 0;
+
+        totalCursor.close();
+        learnedCursor.close();
+
+        return total > 0 ? (double) learned / total * 100 : 0;
+    }
+
     public String[] getNextWord() {
         SQLiteDatabase db = this.getReadableDatabase();
         String[] wordPair = null;
@@ -99,4 +149,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         return wordPair;
     }
+
+
 }
