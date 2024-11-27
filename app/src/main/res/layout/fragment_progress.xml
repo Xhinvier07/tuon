@@ -61,11 +61,6 @@
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp"/>
-
-                <!--<com.github.mikephil.charting.charts.LineChart -->
-                    android:id="@+id/quiz_progress_chart"
-                    android:layout_width="match_parent"
-                    android:layout_height="200dp"/>
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
@@ -88,11 +83,6 @@
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp"/>
-
-                <!--<com.github.mikephil.charting.charts.PieChart -->
-                    android:id="@+id/vocabulary_progress_chart"
-                    android:layout_width="match_parent"
-                    android:layout_height="200dp"/>
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>

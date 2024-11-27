@@ -18,7 +18,7 @@ public class QuizFragment extends Fragment {
     private RadioGroup optionsRadioGroup;
     private Button submitButton;
     private DatabaseHelper dbHelper;
-    private int currentScore = 0;
+    public static int currentScore = 0;
     private int totalQuestions = 0;
 
     @Override
