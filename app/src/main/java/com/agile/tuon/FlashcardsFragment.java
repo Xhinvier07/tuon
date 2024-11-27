@@ -13,21 +13,24 @@ import androidx.fragment.app.Fragment;
 import androidx.cardview.widget.CardView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class FlashcardsFragment extends Fragment {
     private TextView wordTextView;
     private TextView translationTextView;
     private CardView flashcard;
-    private ArrayList<String[]> wordList; // Store word pairs
+    private List<String[]> wordList; // Store word pairs
     private int currentIndex = 0; // Current word index
     private boolean isShowingTranslation = false; // Track which side is shown
     private TextToSpeech textToSpeech;
+    private DatabaseHelper dbHelper;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_flashcards, container, false);
 
         textToSpeech = ((MainActivity) getActivity()).getTextToSpeech();
+        dbHelper = new DatabaseHelper(getContext());
         wordTextView = view.findViewById(R.id.word_text_view);
         translationTextView = view.findViewById(R.id.translation_text_view);
         flashcard = view.findViewById(R.id.flashcard);
@@ -36,8 +39,7 @@ public class FlashcardsFragment extends Fragment {
         Button previousButton = view.findViewById(R.id.previous_button);
 
         // Initialize word list
-        wordList = new ArrayList<>();
-        loadWords(); // Load words from the database or a predefined list
+        loadWords(); // Load words from the database
 
         flashcard.setOnClickListener(v -> flipCard());
         pronounceButton.setOnClickListener(v -> pronounceWord());
@@ -49,7 +51,6 @@ public class FlashcardsFragment extends Fragment {
     }
 
     private void flipCard() {
-        // Flip animation logic
         final Animation flipAnimation = AnimationUtils.loadAnimation(getContext(), R.anim.flip);
         flashcard.startAnimation(flipAnimation);
 
@@ -59,7 +60,6 @@ public class FlashcardsFragment extends Fragment {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                // Toggle visibility based on current state
                 if (isShowingTranslation) {
                     wordTextView.setVisibility(View.VISIBLE);
                     translationTextView.setVisibility(View.GONE);
@@ -67,7 +67,7 @@ public class FlashcardsFragment extends Fragment {
                     wordTextView.setVisibility(View.GONE);
                     translationTextView.setVisibility(View.VISIBLE);
                 }
-                isShowingTranslation = !isShowingTranslation; // Toggle state
+                isShowingTranslation = !isShowingTranslation;
             }
 
             @Override
@@ -107,11 +107,20 @@ public class FlashcardsFragment extends Fragment {
     }
 
     private void loadWords() {
-        // Load words from the database or a predefined list
-        // Example: Adding word pairs (Bisaya, English)
-        wordList.add(new String[]{"Kumusta", "Hello"});
-        wordList.add(new String[]{"Salamat", "Thank you"});
-        wordList.add(new String[]{"Palihug", "Please"});
-        // Add more words as needed
+        // Load words from the database
+        wordList = dbHelper.getAllFlashcards();
+        if (wordList.isEmpty()) {
+            // If the database is empty, add a default word
+            wordList.add(new String[]{"No words", "Please add words to the database"});
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (dbHelper != null) {
+            dbHelper.close();
+        }
     }
 }
+

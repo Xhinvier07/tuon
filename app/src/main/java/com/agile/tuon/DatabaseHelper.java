@@ -5,13 +5,13 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "TuonDB";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     // Tables
     public static final String TABLE_FLASHCARDS = "flashcards";
@@ -24,6 +24,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_ENGLISH = "english";
     public static final String COLUMN_SCORE = "score";
     public static final String COLUMN_DATE = "date";
+
+    // Progress table columns
+    public static final String COLUMN_WORDS_LEARNED = "words_learned";
+    public static final String COLUMN_STREAK_DAYS = "streak_days";
+    public static final String COLUMN_LAST_STUDY_DATE = "last_study_date";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -40,9 +45,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         // Create progress table
         String createProgressTable = "CREATE TABLE " + TABLE_PROGRESS + "("
                 + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + COLUMN_BISAYA + " TEXT,"
-                + "learned INTEGER,"
-                + COLUMN_DATE + " TEXT)";
+                + COLUMN_WORDS_LEARNED + " INTEGER,"
+                + COLUMN_STREAK_DAYS + " INTEGER,"
+                + COLUMN_LAST_STUDY_DATE + " TEXT)";
 
         // Create quiz results table
         String createQuizResultsTable = "CREATE TABLE " + TABLE_QUIZ_RESULTS + "("
@@ -56,6 +61,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         // Insert initial flashcard data
         insertInitialData(db);
+
+        // Initialize progress
+        initializeProgress(db);
     }
 
     private void insertInitialData(SQLiteDatabase db) {
@@ -75,6 +83,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    private void initializeProgress(SQLiteDatabase db) {
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_WORDS_LEARNED, 0);
+        values.put(COLUMN_STREAK_DAYS, 0);
+        values.put(COLUMN_LAST_STUDY_DATE, "");
+        db.insert(TABLE_PROGRESS, null, values);
+    }
+
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_FLASHCARDS);
@@ -83,72 +99,91 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    // Count learned words for today
-    public int getWordsLearnedToday() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-        Cursor cursor = db.rawQuery(
-                "SELECT COUNT(*) FROM " + TABLE_PROGRESS + " WHERE learned = 1 AND date = ?",
-                new String[]{today});
+    public void updateProgress(int wordsLearned, int streakDays, String lastStudyDate) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_WORDS_LEARNED, wordsLearned);
+        values.put(COLUMN_STREAK_DAYS, streakDays);
+        values.put(COLUMN_LAST_STUDY_DATE, lastStudyDate);
 
-        int count = 0;
-        if (cursor.moveToFirst()) {
-            count = cursor.getInt(0);
+        db.update(TABLE_PROGRESS, values, COLUMN_ID + " = ?", new String[]{"1"});
+    }
+
+    public int[] getProgress() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        int[] progress = new int[2]; // [wordsLearned, streakDays]
+
+        Cursor cursor = db.query(TABLE_PROGRESS, new String[]{COLUMN_WORDS_LEARNED, COLUMN_STREAK_DAYS},
+                COLUMN_ID + " = ?", new String[]{"1"}, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            progress[0] = cursor.getInt(cursor.getColumnIndex(COLUMN_WORDS_LEARNED));
+            progress[1] = cursor.getInt(cursor.getColumnIndex(COLUMN_STREAK_DAYS));
+            cursor.close();
         }
-        cursor.close();
-        return count;
+
+        return progress;
     }
 
-    // Fetch average quiz score
-    public double getAverageQuizScore() {
+    public String getLastStudyDate() {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery(
-                "SELECT AVG(" + COLUMN_SCORE + ") FROM " + TABLE_QUIZ_RESULTS, null);
+        String lastStudyDate = "";
 
-        double average = 0;
-        if (cursor.moveToFirst()) {
-            average = cursor.getDouble(0);
+        Cursor cursor = db.query(TABLE_PROGRESS, new String[]{COLUMN_LAST_STUDY_DATE},
+                COLUMN_ID + " = ?", new String[]{"1"}, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            lastStudyDate = cursor.getString(cursor.getColumnIndex(COLUMN_LAST_STUDY_DATE));
+            cursor.close();
         }
-        cursor.close();
-        return average;
+
+        return lastStudyDate;
     }
 
-    // Calculate vocabulary mastery percentage
-    public double getVocabularyMastery() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor totalCursor = db.rawQuery(
-                "SELECT COUNT(*) FROM " + TABLE_FLASHCARDS, null);
-        Cursor learnedCursor = db.rawQuery(
-                "SELECT COUNT(*) FROM " + TABLE_PROGRESS + " WHERE learned = 1", null);
+    public void incrementWordsLearned(int increment) {
+        int[] currentProgress = getProgress();
+        int newWordsLearned = currentProgress[0] + increment;
 
-        int total = totalCursor.moveToFirst() ? totalCursor.getInt(0) : 0;
-        int learned = learnedCursor.moveToFirst() ? learnedCursor.getInt(0) : 0;
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_WORDS_LEARNED, newWordsLearned);
 
-        totalCursor.close();
-        learnedCursor.close();
-
-        return total > 0 ? (double) learned / total * 100 : 0;
+        db.update(TABLE_PROGRESS, values, COLUMN_ID + " = ?", new String[]{"1"});
     }
 
-    public String[] getNextWord() {
+    public String[] getWordOfTheDay() {
         SQLiteDatabase db = this.getReadableDatabase();
-        String[] wordPair = null;
+        String[] wordOfTheDay = new String[2];
 
-        // Query to get a random row from the flashcards table
-        Cursor cursor = db.rawQuery("SELECT " + COLUMN_BISAYA + ", " + COLUMN_ENGLISH +
-                " FROM " + TABLE_FLASHCARDS +
-                " ORDER BY RANDOM() LIMIT 1", null);
+        Cursor cursor = db.query(TABLE_FLASHCARDS, new String[]{COLUMN_BISAYA, COLUMN_ENGLISH},
+                null, null, null, null, "RANDOM()", "1");
+
+        if (cursor != null && cursor.moveToFirst()) {
+            wordOfTheDay[0] = cursor.getString(cursor.getColumnIndex(COLUMN_BISAYA));
+            wordOfTheDay[1] = cursor.getString(cursor.getColumnIndex(COLUMN_ENGLISH));
+            cursor.close();
+        }
+
+        return wordOfTheDay;
+    }
+
+    public List<String[]> getAllFlashcards() {
+        List<String[]> flashcards = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.query(TABLE_FLASHCARDS, new String[]{COLUMN_BISAYA, COLUMN_ENGLISH},
+                null, null, null, null, null);
 
         if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                wordPair = new String[2];
+            while (cursor.moveToNext()) {
+                String[] wordPair = new String[2];
                 wordPair[0] = cursor.getString(cursor.getColumnIndex(COLUMN_BISAYA));
                 wordPair[1] = cursor.getString(cursor.getColumnIndex(COLUMN_ENGLISH));
+                flashcards.add(wordPair);
             }
             cursor.close();
         }
-        return wordPair;
+
+        return flashcards;
     }
-
-
 }

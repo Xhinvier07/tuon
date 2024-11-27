@@ -1,5 +1,8 @@
 package com.agile.tuon;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.view.MenuItem;
@@ -8,10 +11,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import java.util.Locale;
-
-import com.agile.tuon.FlashcardsFragment;
-import com.agile.tuon.QuizFragment;
-import com.agile.tuon.ProgressFragment;
 
 public class MainActivity extends AppCompatActivity {
     private TextToSpeech textToSpeech;
@@ -30,6 +29,9 @@ public class MainActivity extends AppCompatActivity {
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, new FlashcardsFragment())
                 .commit();
+
+        handleNotificationIntent(getIntent());
+        rescheduleNotification();
     }
 
     private void initializeTextToSpeech() {
@@ -46,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
         bottomNav.setOnNavigationItemSelectedListener(item -> {
             Fragment selectedFragment = null;
 
-            // Using if-else instead of switch-case
             if (item.getItemId() == R.id.nav_flashcards) {
                 selectedFragment = new FlashcardsFragment();
             } else if (item.getItemId() == R.id.nav_quiz) {
@@ -75,5 +76,17 @@ public class MainActivity extends AppCompatActivity {
             textToSpeech.shutdown();
         }
         super.onDestroy();
+    }
+
+    private void handleNotificationIntent(Intent intent) {
+        if (intent != null && intent.getAction() != null) {
+            // Handle notification action
+        }
+    }
+
+    private void rescheduleNotification() {
+        SharedPreferences sharedPreferences = getSharedPreferences("TuonPrefs", Context.MODE_PRIVATE);
+        int intervalHours = sharedPreferences.getInt("notificationInterval", 24);
+        NotificationHelper.scheduleNotification(this, intervalHours);
     }
 }

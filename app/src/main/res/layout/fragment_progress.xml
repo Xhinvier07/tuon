@@ -1,17 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:background="@color/background_color">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Your Progress"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_color"
+            android:layout_marginBottom="16dp"/>
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:id="@+id/progress_indicator"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    app:indicatorSize="120dp"
+                    app:trackThickness="8dp"
+                    app:indicatorColor="@color/progress_color"
+                    app:trackColor="@color/progress_background_color"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="16dp">
+
+                    <TextView
+                        android:id="@+id/words_learned_text_view"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="18sp"
+                        android:textColor="@color/text_color"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:id="@+id/streak_days_text_view"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="18sp"
+                        android:textColor="@color/text_color"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -22,23 +86,27 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Learning Statistics"
+                    android:text="Word of the Day"
                     android:textSize="20sp"
                     android:textStyle="bold"
+                    android:textColor="@color/text_color"
                     android:layout_marginBottom="8dp"/>
 
                 <TextView
-                    android:id="@+id/words_learned_text"
+                    android:id="@+id/word_of_the_day_text_view"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="16sp"
+                    android:textSize="24sp"
+                    android:textColor="@color/accent_color"
                     android:layout_marginBottom="4dp"/>
 
                 <TextView
-                    android:id="@+id/average_score_text"
+                    android:id="@+id/word_of_the_day_translation_text_view"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="16sp"/>
+                    android:textSize="18sp"
+                    android:textColor="@color/text_color"/>
+
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
@@ -46,7 +114,8 @@
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -57,32 +126,38 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Quiz Progress"
+                    android:text="Notification Settings"
                     android:textSize="20sp"
                     android:textStyle="bold"
+                    android:textColor="@color/text_color"
                     android:layout_marginBottom="8dp"/>
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
 
                 <TextView
+                    android:id="@+id/notification_interval_text_view"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Vocabulary Progress"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_color"
                     android:layout_marginBottom="8dp"/>
+
+                <com.google.android.material.slider.Slider
+                android:id="@+id/notification_interval_slider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:valueFrom="1"
+                android:valueTo="168"
+                android:stepSize="1"
+                app:labelBehavior="gone"
+                android:layout_marginBottom="16dp"/>
+
+                <Button
+                    android:id="@+id/apply_notification_settings_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Apply Settings"
+                    android:layout_gravity="center"
+                    android:backgroundTint="@color/button_color"/>
+
             </LinearLayout>
 
         </androidx.cardview.widget.CardView>
@@ -90,3 +165,4 @@
     </LinearLayout>
 
 </ScrollView>
+
