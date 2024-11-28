@@ -18,6 +18,7 @@ import java.util.List;
 public class FlashcardsFragment extends Fragment {
     private TextView wordTextView;
     private TextView translationTextView;
+    private TextView pronunciationTextView;
     private CardView flashcard;
     private List<String[]> wordList; // Store word pairs
     private int currentIndex = 0; // Current word index
@@ -33,6 +34,7 @@ public class FlashcardsFragment extends Fragment {
         dbHelper = new DatabaseHelper(getContext());
         wordTextView = view.findViewById(R.id.word_text_view);
         translationTextView = view.findViewById(R.id.translation_text_view);
+        pronunciationTextView = view.findViewById(R.id.pronunciation_text_view);
         flashcard = view.findViewById(R.id.flashcard);
         Button pronounceButton = view.findViewById(R.id.pronounce_button);
         Button nextButton = view.findViewById(R.id.next_button);
@@ -62,9 +64,11 @@ public class FlashcardsFragment extends Fragment {
             public void onAnimationEnd(Animation animation) {
                 if (isShowingTranslation) {
                     wordTextView.setVisibility(View.VISIBLE);
+                    pronunciationTextView.setVisibility(View.VISIBLE);
                     translationTextView.setVisibility(View.GONE);
                 } else {
                     wordTextView.setVisibility(View.GONE);
+                    pronunciationTextView.setVisibility(View.GONE);
                     translationTextView.setVisibility(View.VISIBLE);
                 }
                 isShowingTranslation = !isShowingTranslation;
@@ -98,11 +102,14 @@ public class FlashcardsFragment extends Fragment {
         String[] wordPair = wordList.get(currentIndex);
         String word = wordPair[0]; // The Bisaya word
         String translation = wordPair[1]; // The English translation
+        String pronunciation = wordPair[2]; //The Pronunciation of the word
 
         wordTextView.setText(word);
         translationTextView.setText(translation);
+        pronunciationTextView.setText(pronunciation);
         translationTextView.setVisibility(View.GONE); // Hide translation initially
         wordTextView.setVisibility(View.VISIBLE); // Show Bisaya word
+        pronunciationTextView.setVisibility(View.VISIBLE);
         isShowingTranslation = false; // Reset flip state
     }
 

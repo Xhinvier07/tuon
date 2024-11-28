@@ -22,6 +22,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_ID = "id";
     public static final String COLUMN_BISAYA = "bisaya";
     public static final String COLUMN_ENGLISH = "english";
+    public static final String COLUMN_PRONUNCIATION = "pronunciation";
     public static final String COLUMN_SCORE = "score";
     public static final String COLUMN_DATE = "date";
 
@@ -40,7 +41,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String createFlashcardsTable = "CREATE TABLE " + TABLE_FLASHCARDS + "("
                 + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + COLUMN_BISAYA + " TEXT,"
-                + COLUMN_ENGLISH + " TEXT)";
+                + COLUMN_ENGLISH + " TEXT,"
+                + COLUMN_PRONUNCIATION + " TEXT)";
 
         // Create progress table
         String createProgressTable = "CREATE TABLE " + TABLE_PROGRESS + "("
@@ -68,17 +70,48 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private void insertInitialData(SQLiteDatabase db) {
         String[][] initialWords = {
-                {"salamat", "thank you"},
-                {"maayong buntag", "good morning"},
-                {"maayong gabii", "good evening"},
-                {"unsa", "what"},
-                {"asa", "where"}
+            //Common bisaya words
+                {"salamat", "thank you", "sa.lá.mat."},
+                {"maayong buntag", "good morning", "ma.á.yung bun.tag."},
+                {"maayong hapon", "good afternoon", "ma.á.yung há.pun."},
+                {"maayong gabii", "good evening", "ma.á.yung ga.bí.i."},
+                {"unsa", "what", "un.sa."},
+                {"asa", "where", "á.sa."},
+                {"oo", "yes", "ú.u."},
+                {"dili", "no", "dí.lî."},
+                {"palihog", "please", "pa.lí.hug."},
+                {"kumusta", "how are you", "ku.mus.ta."},
+
+            //Food-related bisaya words
+                {"kaon ta", "let's eat", "ká.un tâ."},
+                {"lami", "delicious", "la.mî."},
+                {"pagkaon", "food", "pag.ká.un."},
+                {"pamahaw", "breakfast", "pa.má.haw."},
+                {"paniudto", "lunch", "pa.ni.ud.tu."},
+                {"tam-is", "sweet", "tam.is."},
+                {"aslom", "sour", "as.lum."},
+                {"parat", "salty", "pá.rat."},
+                {"kosina", "kitchen", "ku.sí.na."},
+                {"busog", "full", "bú.sug."},
+
+            //Bisaya words commonly used while travelling
+                {"duol", "near", "dú.ul."},
+                {"layo", "far", "la.yû."},
+                {"wala", "left", "wa.la."},
+                {"tuo", "right", "tú.u."},
+                {"diri", "here", "di.ri."},
+                {"dira", "there", "dí.ra."},
+                {"deretso", "straight ahead", "di.rit.su."},
+                {"dagat", "sea", "dá.gat."},
+                {"bayan", "town proper", "bá.yan."},
+                {"tabo", "market", "tá.bû."},
         };
 
         for (String[] word : initialWords) {
             ContentValues values = new ContentValues();
             values.put(COLUMN_BISAYA, word[0]);
             values.put(COLUMN_ENGLISH, word[1]);
+            values.put(COLUMN_PRONUNCIATION, word[2]);
             db.insert(TABLE_FLASHCARDS, null, values);
         }
     }
@@ -153,14 +186,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public String[] getWordOfTheDay() {
         SQLiteDatabase db = this.getReadableDatabase();
-        String[] wordOfTheDay = new String[2];
+        String[] wordOfTheDay = new String[3];
 
-        Cursor cursor = db.query(TABLE_FLASHCARDS, new String[]{COLUMN_BISAYA, COLUMN_ENGLISH},
+        Cursor cursor = db.query(TABLE_FLASHCARDS, new String[]{COLUMN_BISAYA, COLUMN_ENGLISH, COLUMN_PRONUNCIATION},
                 null, null, null, null, "RANDOM()", "1");
 
         if (cursor != null && cursor.moveToFirst()) {
             wordOfTheDay[0] = cursor.getString(cursor.getColumnIndex(COLUMN_BISAYA));
             wordOfTheDay[1] = cursor.getString(cursor.getColumnIndex(COLUMN_ENGLISH));
+            wordOfTheDay[2] = cursor.getString(cursor.getColumnIndex(COLUMN_PRONUNCIATION));
             cursor.close();
         }
 
@@ -171,14 +205,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         List<String[]> flashcards = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
-        Cursor cursor = db.query(TABLE_FLASHCARDS, new String[]{COLUMN_BISAYA, COLUMN_ENGLISH},
+        Cursor cursor = db.query(TABLE_FLASHCARDS, new String[]{COLUMN_BISAYA, COLUMN_ENGLISH, COLUMN_PRONUNCIATION},
                 null, null, null, null, null);
 
         if (cursor != null) {
             while (cursor.moveToNext()) {
-                String[] wordPair = new String[2];
+                String[] wordPair = new String[3];
                 wordPair[0] = cursor.getString(cursor.getColumnIndex(COLUMN_BISAYA));
                 wordPair[1] = cursor.getString(cursor.getColumnIndex(COLUMN_ENGLISH));
+                wordPair[2] = cursor.getString(cursor.getColumnIndex(COLUMN_PRONUNCIATION));
                 flashcards.add(wordPair);
             }
             cursor.close();
