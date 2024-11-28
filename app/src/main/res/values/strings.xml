@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">TUON</string>
+    <string name="your_progress">Your Progress</string>
+    <string name="word_of_the_day">Word of the Day</string>
+    <string name="common_phrases">Common Phrases</string>
+    <string name="play_pronunciation">Play pronunciation</string>
 </resources>

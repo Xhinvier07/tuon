@@ -60,7 +60,7 @@
         android:layout_below="@id/flashcard"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp"
-        android:backgroundTint="#003C16"
+        android:backgroundTint="#103C16"
         android:text="Pronounce" />
 
     <Button

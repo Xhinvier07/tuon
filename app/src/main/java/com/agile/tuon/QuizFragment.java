@@ -37,12 +37,29 @@ public class QuizFragment extends Fragment {
     SQLiteDatabase db;
     DatabaseHelper dh;
 
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        resetQuiz();
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (hidden) {
+            resetQuiz();
+        }
+    }
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_quiz, container, false);
 
         dbHelper = new DatabaseHelper(getContext());
 
+        Button startQuizButton = view.findViewById(R.id.start_quiz_button);
         questionTextView = view.findViewById(R.id.question_text_view);
         optionsRadioGroup = view.findViewById(R.id.options_radio_group);
         submitButton = view.findViewById(R.id.submit_button);
@@ -52,17 +69,26 @@ public class QuizFragment extends Fragment {
         CardView questionCard = view.findViewById(R.id.question_card);
         questionCard.setCardBackgroundColor(ContextCompat.getColor(requireContext(), R.color.primary_color));
 
+        startQuizButton.setOnClickListener(v -> {
+            // Hide start button and show quiz content
+            startQuizButton.setVisibility(View.GONE);
+            questionCard.setVisibility(View.VISIBLE);
+            optionsRadioGroup.setVisibility(View.VISIBLE);
+            submitButton.setVisibility(View.VISIBLE);
+            scoreTextView.setVisibility(View.VISIBLE);
+
+            // Initialize and load questions
+            loadQuestionsFromDatabase();
+            Collections.shuffle(questions);
+            loadNextQuestion();
+            updateScoreDisplay();
+        });
+
         submitButton.setOnClickListener(v -> checkAnswer());
-
-        // Load questions from the database
-        loadQuestionsFromDatabase();
-        Collections.shuffle(questions);
-
-        loadNextQuestion();
-        updateScoreDisplay();
 
         return view;
     }
+
 
     private void loadQuestionsFromDatabase() {
         List<String[]> flashcards = dbHelper.getAllFlashcards();
@@ -162,9 +188,9 @@ public class QuizFragment extends Fragment {
                 currentScore++;
                 feedbackTextView.setText("Correct!");
                 feedbackTextView.setTextColor(ContextCompat.getColor(requireContext(), R.color.correct_color));
-                dh.incrementWordsLearned(1);
+                dbHelper.incrementWordsLearned(1);  // Changed from dh to dbHelper
             } else {
-                feedbackTextView.setText("Incorrect. The correct answer is: " + currentQuestion.getCorrectAnswer());
+                feedbackTextView.setText("Incorrect." +"\n" + "The correct answer is: " + currentQuestion.getCorrectAnswer());
                 feedbackTextView.setTextColor(ContextCompat.getColor(requireContext(), R.color.incorrect_color));
             }
 
@@ -206,6 +232,36 @@ public class QuizFragment extends Fragment {
 
         public String getCorrectAnswer() {
             return correctAnswer;
+        }
+    }
+
+
+    private void resetQuiz() {
+        currentScore = 0;
+        totalQuestions = 0;
+        currentQuestionIndex = 0;
+
+        // Only proceed with UI updates if the fragment is added to an activity
+        if (isAdded()) {
+            // Reset UI elements
+            if (questionTextView != null) {
+                questionTextView.setText("");
+            }
+            if (optionsRadioGroup != null) {
+                optionsRadioGroup.removeAllViews();
+            }
+            if (feedbackTextView != null) {
+                feedbackTextView.setVisibility(View.GONE);
+            }
+            if (scoreTextView != null) {
+                scoreTextView.setText("Score: 0/0");
+            }
+
+            // Reset questions if needed
+            if (questions != null) {
+                loadQuestionsFromDatabase();
+                Collections.shuffle(questions);
+            }
         }
     }
 }

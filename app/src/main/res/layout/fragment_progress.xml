@@ -33,14 +33,27 @@
                 android:orientation="horizontal"
                 android:padding="16dp">
 
-                <com.google.android.material.progressindicator.CircularProgressIndicator
-                    android:id="@+id/progress_indicator"
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
-                    app:indicatorSize="120dp"
-                    app:trackThickness="8dp"
-                    app:indicatorColor="@color/progress_color"
-                    app:trackColor="@color/progress_background_color"/>
+                <FrameLayout
+                    android:layout_width="130dp"
+                    android:layout_height="130dp">
+
+                    <com.google.android.material.progressindicator.CircularProgressIndicator
+                        android:id="@+id/progress_indicator"
+                        android:layout_width="150dp"
+                        android:layout_height="150dp"
+                        app:indicatorSize="120dp"
+                        app:trackThickness="8dp"
+                        app:indicatorColor="@color/progress_color"
+                        app:trackColor="@color/progress_background_color"/>
+
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/profile_image"
+                        android:layout_width="105dp"
+                        android:layout_height="105dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/profile" />
+
+                </FrameLayout>
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -62,7 +75,16 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="18sp"
-                        android:textColor="@color/text_color"/>
+                        android:textColor="@color/text_color"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:id="@+id/proficiency_level_text_view"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/accent_color"/>
 
                 </LinearLayout>
 
@@ -92,13 +114,30 @@
                     android:textColor="@color/text_color"
                     android:layout_marginBottom="8dp"/>
 
-                <TextView
-                    android:id="@+id/word_of_the_day_text_view"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="24sp"
-                    android:textColor="@color/accent_color"
-                    android:layout_marginBottom="4dp"/>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/word_of_the_day_text_view"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textSize="24sp"
+                        android:textColor="@color/accent_color"
+                        android:layout_marginBottom="4dp"/>
+
+                    <ImageButton
+                        android:id="@+id/play_pronunciation_button"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_play_audio"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Play pronunciation"/>
+
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/word_of_the_day_translation_text_view"
@@ -111,9 +150,11 @@
 
         </androidx.cardview.widget.CardView>
 
+        <!-- New cards for additional words -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
             app:cardCornerRadius="8dp"
             app:cardElevation="4dp">
 
@@ -126,37 +167,21 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Notification Settings"
+                    android:text="Common Phrases"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_color"
                     android:layout_marginBottom="8dp"/>
 
-                <TextView
-                    android:id="@+id/notification_interval_text_view"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:id="@+id/common_phrases_container"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_color"
-                    android:layout_marginBottom="8dp"/>
+                    android:orientation="vertical">
 
-                <com.google.android.material.slider.Slider
-                android:id="@+id/notification_interval_slider"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:valueFrom="1"
-                android:valueTo="168"
-                android:stepSize="1"
-                app:labelBehavior="gone"
-                android:layout_marginBottom="16dp"/>
+                    <!-- Common phrases will be added here programmatically -->
 
-                <Button
-                    android:id="@+id/apply_notification_settings_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Apply Settings"
-                    android:layout_gravity="center"
-                    android:backgroundTint="@color/button_color"/>
+                </LinearLayout>
 
             </LinearLayout>
 

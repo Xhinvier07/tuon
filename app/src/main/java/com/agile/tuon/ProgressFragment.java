@@ -1,18 +1,18 @@
 package com.agile.tuon;
 
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Button;
 import androidx.fragment.app.Fragment;
 import androidx.cardview.widget.CardView;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
-import com.google.android.material.slider.Slider;
-import static com.agile.tuon.QuizFragment.currentScore;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -25,35 +25,42 @@ public class ProgressFragment extends Fragment {
     private CircularProgressIndicator progressIndicator;
     private TextView wordOfTheDayTextView;
     private TextView wordOfTheDayTranslationTextView;
-    private Slider notificationIntervalSlider;
-    private TextView notificationIntervalTextView;
-    private Button applyNotificationSettingsButton;
-    private SharedPreferences sharedPreferences;
+    private ImageButton playPronunciationButton;
+    private MediaPlayer mediaPlayer;
+    private LinearLayout commonPhrasesContainer;
+    private Handler handler = new Handler();
+    private TextView proficiencyLevelTextView;
+    private static final int WORDS_TARGET = 100;
 
-    private static final String PREFS_NAME = "TuonPrefs";
-    private static final String PREF_NOTIFICATION_INTERVAL = "notificationInterval";
+    private String[][] commonPhrases = {
+            {"Maayong Buntag", "Good Morning"},
+            {"Wala ko kasabot","I don't understand" },
+            {"Kumusta", "How are you"},
+            {"Walay Sapayan", "You're Welcome"},
+            {"Amping", "Take care"},
+            {"Unsa Imong Pangalan", "Good Evening"},
+            {"Pila imong edad", "How old are you"}
+    };
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_progress, container, false);
 
         dbHelper = new DatabaseHelper(getContext());
-        sharedPreferences = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 
         wordsLearnedTextView = view.findViewById(R.id.words_learned_text_view);
         streakDaysTextView = view.findViewById(R.id.streak_days_text_view);
+        proficiencyLevelTextView = view.findViewById(R.id.proficiency_level_text_view);
         progressIndicator = view.findViewById(R.id.progress_indicator);
         wordOfTheDayTextView = view.findViewById(R.id.word_of_the_day_text_view);
         wordOfTheDayTranslationTextView = view.findViewById(R.id.word_of_the_day_translation_text_view);
-        notificationIntervalSlider = view.findViewById(R.id.notification_interval_slider);
-        notificationIntervalTextView = view.findViewById(R.id.notification_interval_text_view);
-        applyNotificationSettingsButton = view.findViewById(R.id.apply_notification_settings_button);
+        playPronunciationButton = view.findViewById(R.id.play_pronunciation_button);
+        commonPhrasesContainer = view.findViewById(R.id.common_phrases_container);
 
         updateProgressDisplay();
         updateWordOfTheDay();
-        setupNotificationSettings();
-        setupNotificationSettings();
-
+        setupCommonPhrases();
 
         return view;
     }
@@ -64,17 +71,29 @@ public class ProgressFragment extends Fragment {
         int streakDays = progress[1];
         String lastStudyDate = dbHelper.getLastStudyDate();
 
-        wordsLearnedTextView.setText(String.format(Locale.getDefault(), "%d words learned", wordsLearned));
+        wordsLearnedTextView.setText(String.format(Locale.getDefault(), "%d/%d words learned", wordsLearned, WORDS_TARGET));
         streakDaysTextView.setText(String.format(Locale.getDefault(), "%d day streak", streakDays));
 
-        // Assuming a goal of 1000 words
-        int progressPercentage = (int) ((wordsLearned / 10) * 100);
+        // Calculate progress percentage based on 100 words target
+        int progressPercentage = (int) ((wordsLearned / (float) WORDS_TARGET) * 100);
         progressIndicator.setProgress(progressPercentage);
+
+        // Update proficiency level
+        String proficiencyLevel = getProficiencyLevel(wordsLearned);
+        proficiencyLevelTextView.setText(proficiencyLevel);
 
         updateStreak(lastStudyDate);
     }
 
-
+    private String getProficiencyLevel(int wordsLearned) {
+        if (wordsLearned < 33) {
+            return "BEGINNER";
+        } else if (wordsLearned < 66) {
+            return "INTERMEDIATE";
+        } else {
+            return "PROFESSIONAL";
+        }
+    }
 
     private void updateStreak(String lastStudyDate) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -113,35 +132,69 @@ public class ProgressFragment extends Fragment {
         if (wordOfTheDay != null) {
             wordOfTheDayTextView.setText(wordOfTheDay[0]);
             wordOfTheDayTranslationTextView.setText(wordOfTheDay[1]);
+            setupAudioPronunciation(playPronunciationButton, null, wordOfTheDay[0]);
         }
     }
 
-    private void setupNotificationSettings() {
-        int savedInterval = sharedPreferences.getInt(PREF_NOTIFICATION_INTERVAL, 24);
-        notificationIntervalSlider.setValue(savedInterval);
-        updateNotificationIntervalText(savedInterval);
+    private void setupCommonPhrases() {
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        for (String[] phrase : commonPhrases) {
+            View phraseView = inflater.inflate(R.layout.item_common_phrase, commonPhrasesContainer, false);
+            TextView phraseTextView = phraseView.findViewById(R.id.phrase_text_view);
+            TextView translationTextView = phraseView.findViewById(R.id.translation_text_view);
+            ImageButton playButton = phraseView.findViewById(R.id.play_button);
+            CircularProgressIndicator audioProgress = phraseView.findViewById(R.id.audio_progress);
 
-        notificationIntervalSlider.addOnChangeListener((slider, value, fromUser) -> {
-            updateNotificationIntervalText((int) value);
-        });
+            phraseTextView.setText(phrase[0]);
+            translationTextView.setText(phrase[1]);
+            setupAudioPronunciation(playButton, audioProgress, phrase[0]);
 
-        applyNotificationSettingsButton.setOnClickListener(v -> {
-            int intervalHours = (int) notificationIntervalSlider.getValue();
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putInt(PREF_NOTIFICATION_INTERVAL, intervalHours);
-            editor.apply();
-
-            NotificationHelper.scheduleNotification(requireContext(), intervalHours);
-        });
+            commonPhrasesContainer.addView(phraseView);
+        }
     }
 
-    private void updateNotificationIntervalText(int hours) {
-        if (hours < 24) {
-            notificationIntervalTextView.setText(String.format(Locale.getDefault(), "Remind me every %d hour(s)", hours));
+    private void setupAudioPronunciation(ImageButton playButton, CircularProgressIndicator audioProgress, String word) {
+        String audioFileName = word.toLowerCase().replace(" ", "_");
+        int resId = getResources().getIdentifier(audioFileName, "raw", requireContext().getPackageName());
+
+        if (resId != 0) {
+            playButton.setVisibility(View.VISIBLE);
+            playButton.setOnClickListener(v -> playAudio(resId, playButton, audioProgress));
         } else {
-            int days = hours / 24;
-            notificationIntervalTextView.setText(String.format(Locale.getDefault(), "Remind me every %d day(s)", days));
+            playButton.setVisibility(View.GONE);
         }
+    }
+
+    private void playAudio(int resId, ImageButton playButton, CircularProgressIndicator audioProgress) {
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+        }
+        mediaPlayer = MediaPlayer.create(requireContext(), resId);
+        mediaPlayer.setOnCompletionListener(mp -> {
+            mp.release();
+            mediaPlayer = null;
+            playButton.setVisibility(View.VISIBLE);
+            audioProgress.setVisibility(View.GONE);
+        });
+
+        playButton.setVisibility(View.GONE);
+        audioProgress.setVisibility(View.VISIBLE);
+        audioProgress.setProgress(0);
+
+        mediaPlayer.start();
+
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mediaPlayer != null) {
+                    int progress = (int) ((float) mediaPlayer.getCurrentPosition() / mediaPlayer.getDuration() * 100);
+                    audioProgress.setProgress(progress);
+                    if (mediaPlayer.isPlaying()) {
+                        handler.postDelayed(this, 100);
+                    }
+                }
+            }
+        });
     }
 
     @Override
@@ -157,11 +210,16 @@ public class ProgressFragment extends Fragment {
         if (dbHelper != null) {
             dbHelper.close();
         }
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+        handler.removeCallbacksAndMessages(null);
     }
 
-    // This method should be called from the QuizFragment or wherever the quiz is implemented
     public void updateProgressFromQuiz(int correctAnswers) {
         dbHelper.incrementWordsLearned(correctAnswers);
         updateProgressDisplay();
     }
 }
+
