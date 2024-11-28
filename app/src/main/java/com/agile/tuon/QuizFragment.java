@@ -1,5 +1,9 @@
 package com.agile.tuon;
 
+import com.agile.tuon.DatabaseHelper;
+
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,6 +33,9 @@ public class QuizFragment extends Fragment {
     private int totalQuestions = 0;
     private List<Question> questions;
     private int currentQuestionIndex = 0;
+
+    SQLiteDatabase db;
+    DatabaseHelper dh;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -106,7 +113,7 @@ public class QuizFragment extends Fragment {
     }
 
     private void loadNextQuestion() {
-        if (currentQuestionIndex < questions.size()) {
+        if (currentQuestionIndex < 10) {
             Question question = questions.get(currentQuestionIndex);
             questionTextView.setText(question.getQuestionText());
             optionsRadioGroup.removeAllViews();
@@ -141,6 +148,7 @@ public class QuizFragment extends Fragment {
     }
 
     private void checkAnswer() {
+        ContentValues values = new ContentValues();
         int selectedId = optionsRadioGroup.getCheckedRadioButtonId();
         if (selectedId != -1) {
             RadioButton selectedOption = optionsRadioGroup.findViewById(selectedId);
@@ -154,6 +162,7 @@ public class QuizFragment extends Fragment {
                 currentScore++;
                 feedbackTextView.setText("Correct!");
                 feedbackTextView.setTextColor(ContextCompat.getColor(requireContext(), R.color.correct_color));
+                dh.incrementWordsLearned(1);
             } else {
                 feedbackTextView.setText("Incorrect. The correct answer is: " + currentQuestion.getCorrectAnswer());
                 feedbackTextView.setTextColor(ContextCompat.getColor(requireContext(), R.color.incorrect_color));

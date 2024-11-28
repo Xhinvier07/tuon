@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment;
 import androidx.cardview.widget.CardView;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.android.material.slider.Slider;
+import static com.agile.tuon.QuizFragment.currentScore;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -67,7 +68,7 @@ public class ProgressFragment extends Fragment {
         streakDaysTextView.setText(String.format(Locale.getDefault(), "%d day streak", streakDays));
 
         // Assuming a goal of 1000 words
-        int progressPercentage = (int) ((wordsLearned / 1000.0) * 100);
+        int progressPercentage = (int) ((wordsLearned / 10) * 100);
         progressIndicator.setProgress(progressPercentage);
 
         updateStreak(lastStudyDate);
