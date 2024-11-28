@@ -1,10 +1,13 @@
 package com.agile.tuon;
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -142,6 +145,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.update(TABLE_PROGRESS, values, COLUMN_ID + " = ?", new String[]{"1"});
     }
 
+    @SuppressLint("Range")
     public int[] getProgress() {
         SQLiteDatabase db = this.getReadableDatabase();
         int[] progress = new int[2]; // [wordsLearned, streakDays]
@@ -166,7 +170,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 COLUMN_ID + " = ?", new String[]{"1"}, null, null, null);
 
         if (cursor != null && cursor.moveToFirst()) {
-            lastStudyDate = cursor.getString(cursor.getColumnIndex(COLUMN_LAST_STUDY_DATE));
+            int columnIndex = cursor.getColumnIndex(COLUMN_LAST_STUDY_DATE);
+            if (columnIndex != -1) {
+                lastStudyDate = cursor.getString(columnIndex);
+            }
             cursor.close();
         }
 
@@ -192,9 +199,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 null, null, null, null, "RANDOM()", "1");
 
         if (cursor != null && cursor.moveToFirst()) {
-            wordOfTheDay[0] = cursor.getString(cursor.getColumnIndex(COLUMN_BISAYA));
-            wordOfTheDay[1] = cursor.getString(cursor.getColumnIndex(COLUMN_ENGLISH));
-            wordOfTheDay[2] = cursor.getString(cursor.getColumnIndex(COLUMN_PRONUNCIATION));
+            int bisayaIndex = cursor.getColumnIndex(COLUMN_BISAYA);
+            int englishIndex = cursor.getColumnIndex(COLUMN_ENGLISH);
+            int pronunciationIndex = cursor.getColumnIndex(COLUMN_PRONUNCIATION);
+
+            if (bisayaIndex != -1 && englishIndex != -1 && pronunciationIndex != -1) {
+                wordOfTheDay[0] = cursor.getString(bisayaIndex);
+                wordOfTheDay[1] = cursor.getString(englishIndex);
+                wordOfTheDay[2] = cursor.getString(pronunciationIndex);
+            }
             cursor.close();
         }
 
@@ -209,12 +222,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 null, null, null, null, null);
 
         if (cursor != null) {
-            while (cursor.moveToNext()) {
-                String[] wordPair = new String[3];
-                wordPair[0] = cursor.getString(cursor.getColumnIndex(COLUMN_BISAYA));
-                wordPair[1] = cursor.getString(cursor.getColumnIndex(COLUMN_ENGLISH));
-                wordPair[2] = cursor.getString(cursor.getColumnIndex(COLUMN_PRONUNCIATION));
-                flashcards.add(wordPair);
+            int bisayaIndex = cursor.getColumnIndex(COLUMN_BISAYA);
+            int englishIndex = cursor.getColumnIndex(COLUMN_ENGLISH);
+            int pronunciationIndex = cursor.getColumnIndex(COLUMN_PRONUNCIATION);
+
+            if (bisayaIndex != -1 && englishIndex != -1 && pronunciationIndex != -1) {
+                while (cursor.moveToNext()) {
+                    String[] wordPair = new String[3];
+                    wordPair[0] = cursor.getString(bisayaIndex);
+                    wordPair[1] = cursor.getString(englishIndex);
+                    wordPair[2] = cursor.getString(pronunciationIndex);
+                    flashcards.add(wordPair);
+                }
+            } else {
+                // Handle the case where one or more columns do not exist
+                // For example, you can log an error or throw an exception
+                Log.e("DatabaseHelper", "One or more columns do not exist in the table");
             }
             cursor.close();
         }
