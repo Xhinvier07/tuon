@@ -200,7 +200,7 @@ public class QuizFragment extends Fragment {
             updateScoreDisplay();
 
             // Delay loading the next question
-            optionsRadioGroup.postDelayed(this::loadNextQuestion, 4000);
+            optionsRadioGroup.postDelayed(this::loadNextQuestion, 2000);
         } else {
             Toast.makeText(getContext(), "Please select an option", Toast.LENGTH_SHORT).show();
         }
@@ -233,6 +233,10 @@ public class QuizFragment extends Fragment {
         public String getCorrectAnswer() {
             return correctAnswer;
         }
+    }
+
+    public boolean isQuizOngoing() {
+        return currentQuestionIndex > 0 && currentQuestionIndex <= 10;
     }
 
 

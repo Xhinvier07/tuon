@@ -11,6 +11,10 @@ import android.widget.Button;
 import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import androidx.cardview.widget.CardView;
+import android.Manifest;
+import androidx.core.content.ContextCompat;
+import androidx.core.app.ActivityCompat;
+import android.content.pm.PackageManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +33,13 @@ public class FlashcardsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_flashcards, container, false);
+
+
+
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.INTERNET)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.INTERNET}, 100);
+        }
 
         textToSpeech = ((MainActivity) getActivity()).getTextToSpeech();
         dbHelper = new DatabaseHelper(getContext());
@@ -51,6 +62,8 @@ public class FlashcardsFragment extends Fragment {
         loadCurrentWord(); // Load the first word
         return view;
     }
+
+
 
     private void flipCard() {
         final Animation flipAnimation = AnimationUtils.loadAnimation(getContext(), R.anim.flip);
